@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Défi Brawl Stars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script src="https://kit.fontawesome.com/6a12c1af48.js" crossorigin="anonymous"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#FDCD22',secondary:'#9013FE'},borderRadius:{'none':'0px','sm':'8px',DEFAULT:'12px','md':'16px','lg':'20px','xl':'24px','2xl':'28px','3xl':'32px','full':'9999px','button':'12px'}}}}</script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Lilita One', cursive;
+background-image: url('https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJwYXRoIjoic3VwZXJjZWxsXC9maWxlXC9tQ0RoYlBTRzR2Y3lUTWZZSkNwSy5wbmcifQ:supercell:dGv8fX-IhT--hYL3ZxOeobTi9tqGFgkbZYdZjVPNxZ4?width=2400');
+background-size: cover;
+background-position: center;
+background-attachment: fixed;
+}
+.brawler-card {
+transition: all 0.3s ease;
+}
+.brawler-card.animate {
+transform: scale(1.05);
+}
+.rank-badge {
+text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.button-generate:active {
+transform: scale(0.98);
+}
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+.loading {
+animation: spin 1s linear infinite;
+}
+.share-modal {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 50;
+opacity: 0;
+visibility: hidden;
+transition: opacity 0.3s, visibility 0.3s;
+}
+.share-modal.active {
+opacity: 1;
+visibility: visible;
+}
+.share-modal-content {
+background-color: white;
+border-radius: 12px;
+padding: 24px;
+width: 85%;
+max-width: 320px;
+transform: scale(0.9);
+transition: transform 0.3s;
+}
+.share-modal.active .share-modal-content {
+transform: scale(1);
+}
+.completed-challenge {
+position: relative;
+}
+.completed-challenge::after {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.1);
+border-radius: 12px;
+z-index: 1;
+}
+.completed-challenge::before {
+content: '✓';
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+width: 60px;
+height: 60px;
+background-color: rgba(34, 197, 94, 0.9);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+font-size: 32px;
+z-index: 2;
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+body.generating {
+position: relative;
+}
+body.generating::after {
+content: '';
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: radial-gradient(circle, rgba(253, 205, 34, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+animation: pulse 2s infinite;
+pointer-events: none;
+z-index: -1;
+}
+@keyframes pulse {
+0% { opacity: 0.3; }
+50% { opacity: 0.7; }
+100% { opacity: 0.3; }
+}
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center pt-14 pb-20">
+<header class="fixed top-0 w-full bg-white/90 backdrop-blur-sm shadow-md z-10">
+<div class="flex items-center justify-center h-14 px-4">
+<h1 class="text-2xl text-primary font-['Lilita_One'] tracking-wide">Défi Brawl Stars</h1>
+</div>
+</header>
+<main class="w-full max-w-md px-4 flex-1 flex flex-col items-center justify-center gap-8 mt-4">
+<div id="brawler-container" class="brawler-card w-full bg-white/90 rounded-xl shadow-lg overflow-hidden">
+<div class="p-6 flex flex-col items-center">
+<div class="w-48 h-48 rounded-full bg-primary/10 mb-4 overflow-hidden flex items-center justify-center">
+<img id="brawler-image" src="https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJwYXRoIjoic3VwZXJjZWxsXC9maWxlXC9oZnRURHd5TllLRlNhRUJpblZkRi5wbmcifQ:supercell:3JGPmuxpg6448n3x4x2AhpmrTtjnL0JeACm_sJexZgw?width=2400" alt="" class="w-full h-full object-contain">
+</div>
+<h2 id="brawler-name" class="text-2xl text-gray-800 font-['Lilita_One'] mb-2">?</h2>
+<div class="w-full mt-4">
+<div class="text-center mb-2 text-gray-600 font-medium">Objectif</div>
+<div id="rank-container" class="flex items-center justify-center">
+<div id="rank-badge" class="rank-badge text-4xl font-['Lilita_One'] text-white px-6 py-3 rounded-xl bg-orange-500">
+Rang <span id="rank-number">?</span>
+</div>
+</div>
+<div class="text-center mt-4 text-sm text-gray-500">
+Atteins ce rang avec ce Brawler !
+</div>
+</div>
+</div>
+</div>
+<div class="w-full space-y-4">
+<button id="generate-button" class="button-generate w-full py-4 bg-primary text-white text-xl font-['Lilita_One'] !rounded-button shadow-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-all cursor-pointer">
+<i class="fa-solid fa-rotate"></i>
+Générer un Nouveau Défi
+</button>
+<div class="flex gap-3">
+<button id="share-button" class="w-1/2 py-3 bg-secondary text-white font-['Lilita_One'] !rounded-button shadow-md flex items-center justify-center gap-2 hover:bg-secondary/90 transition-all cursor-pointer">
+<i class="fa-solid fa-arrow-up-from-bracket"></i>
+Partager
+</button>
+<button id="complete-button" class="w-1/2 py-3 bg-green-500 text-white font-['Lilita_One'] !rounded-button shadow-md flex items-center justify-center gap-2 hover:bg-green-600 transition-all cursor-pointer">
+<i class="fa-solid fa-check"></i>
+Marquer Complété
+</button>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-0 w-full bg-white/90 backdrop-blur-sm shadow-lg">
+<div class="grid grid-cols-3 h-16">
+<a href="javascript:void(0)" onclick="navigateTo('home')" class="flex flex-col items-center justify-center text-primary">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="fa-solid fa-house"></i>
+</div>
+<span class="text-xs mt-1">Accueil</span>
+</a>
+<a href="javascript:void(0)" onclick="navigateTo('history')" class="flex flex-col items-center justify-center text-gray-500">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="fa-solid fa-clock-rotate-left"></i>
+</div>
+<span class="text-xs mt-1">Historique</span>
+</a>
+<a href="javascript:void(0)" onclick="navigateTo('settings')" class="flex flex-col items-center justify-center text-gray-500">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="fa-solid fa-gear"></i>
+</div>
+<span class="text-xs mt-1">Paramètres</span>
+</a>
+</div>
+</footer>
+<script>
+const brawlers = [
+{name: 'Shelly', image: 'https://static.wikia.nocookie.net/brawlstars/images/e/e5/Shelly_Portrait.png/revision/latest?cb=20200304182226'},
+{name: 'Nita', image: 'https://static.wikia.nocookie.net/brawlstars/images/9/9f/Nita_Portrait.png/revision/latest?cb=20200304182317'},
+{name: 'Colt', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/08/Colt_Portrait.png/revision/latest?cb=20210115110713'},
+{name: 'Bull', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/4a/Bull_Portrait.png/revision/latest?cb=20200304182325'},
+{name: 'Brock', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f9/Brock_Portrait.png/revision/latest?cb=20240830201725'},
+{name: 'Dynamike', image: 'https://static.wikia.nocookie.net/brawlstars/images/6/64/Dynamike_Portrait.png/revision/latest?cb=20200304182305'},
+{name: 'Bo', image: 'https://static.wikia.nocookie.net/brawlstars/images/3/30/Bo_Portrait.png/revision/latest?cb=20191013135616'},
+{name: 'Tick', image: 'https://static.wikia.nocookie.net/brawlstars/images/7/72/Tick_Portrait.png/revision/latest?cb=20190629012550'},
+{name: 'A.R.K.A.D.', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/0b/8-Bit_Portrait.png/revision/latest?cb=20191012200012'},
+{name: 'Eliz@', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/a4/Emz_Portrait.png/revision/latest?cb=20200304182125'},
+{name: 'El Costo', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c5/El_Primo_Portrait.png/revision/latest?cb=20191012200018'},
+{name: 'Bartaba', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/a1/Barley_Portrait.png/revision/latest?cb=20200304182055'},
+{name: 'Poco', image: 'https://static.wikia.nocookie.net/brawlstars/images/5/59/Poco_Portrait.png/revision/latest?cb=20210115111016'},
+{name: 'Rosa', image: 'https://static.wikia.nocookie.net/brawlstars/images/9/94/Rosa_Portrait.png/revision/latest?cb=20200303144700'},
+{name: 'Ricochet', image: 'https://static.wikia.nocookie.net/brawlstars/images/e/e1/Rico_Portrait.png/revision/latest?cb=20200304182045'},
+{name: 'Darryl', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/46/Darryl_Portrait.png/revision/latest?cb=20200317100419'},
+{name: 'Penny', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/8d/Penny_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20220629081359'},
+{name: 'Carl', image: 'https://static.wikia.nocookie.net/brawlstars/images/1/19/Carl_Portrait.png/revision/latest?cb=20200304182115'},
+{name: 'Jacky', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/03/Jacky_Portrait.png/revision/latest?cb=20200317100434'},
+{name: 'Poly', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f0/Piper_Portrait.png/revision/latest?cb=20200304182144'},
+{name: 'Pam', image: 'https://static.wikia.nocookie.net/brawlstars/images/d/dc/Pam_Portrait.png/revision/latest?cb=20200513143851'},
+{name: 'Frank', image: 'https://static.wikia.nocookie.net/brawlstars/images/6/63/Frank_Portrait.png/revision/latest?cb=20200304182409'},
+{name: 'Billie', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c2/Bibi_Portrait.png/revision/latest?cb=20200303144656'},
+{name: 'Béa', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/ae/Bea_Portrait.png/revision/latest?cb=20200317100451'},
+{name: 'Nani', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c0/Nani_Portrait.png/revision/latest?cb=20200513144321'},
+{name: 'Edgar', image: 'https://static.wikia.nocookie.net/brawlstars/images/b/b4/Edgar_Portrait.png/revision/latest?cb=20201218104515'},
+{name: 'Griff', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c9/Griff_Portrait.png/revision/latest?cb=20210616224003'},
+{name: 'Grom', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f5/Grom_Portrait.png/revision/latest?cb=20211218013507'},
+{name: 'Bonnie', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f0/Bonnie_Portrait.png/revision/latest?cb=20220429065440'},
+{name: 'Fang', image: 'https://static.wikia.nocookie.net/brawlstars/images/b/b8/Fang_Portrait.png/revision/latest?cb=20211218013643'},
+{name: 'Gray', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c6/Gray_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20221214180416'},
+{name: 'Willow', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/fb/Willow_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20230302001454'},
+{name: 'Maisie', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/a1/Maisie_Portrait.png/revision/latest?cb=20230426150815'},
+{name: 'Hank', image: 'https://static.wikia.nocookie.net/brawlstars/images/2/29/Hank_Portrait.png/revision/latest?cb=20230427111021'},
+{name: 'Pearl', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/05/Pearl_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20230905134343'},
+{name: 'Jessie', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/4e/Jessie_Portrait.png/revision/latest?cb=20211122033625'},
+{name: 'Chuck', image: 'https://static.wikia.nocookie.net/brawlstars/images/7/7f/Chuck_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20230907153950'},
+{name: 'Gus', image: 'https://static.wikia.nocookie.net/brawlstars/images/2/2c/Gus_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20220901142403'},
+{name: 'Stu', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c8/Stu_Portrait.png/revision/latest?cb=20210309220216'},
+{name: 'Gaël', image: 'https://static.wikia.nocookie.net/brawlstars/images/3/3f/Gale_Portrait.png/revision/latest?cb=20200513143833'},
+{name: 'Colette', image: 'https://static.wikia.nocookie.net/brawlstars/images/e/e8/Colette_Portrait.png/revision/latest?cb=20200911212332'},
+{name: 'Belle', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/82/Belle_Portrait.png/revision/latest?cb=20240913100835'},
+{name: 'Ash', image: 'https://static.wikia.nocookie.net/brawlstars/images/9/92/Ash_Portrait.png/revision/latest?cb=20210825233042'},
+{name: 'Lola', image: 'https://static.wikia.nocookie.net/brawlstars/images/9/9f/Lola_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20211027003449'},
+{name: 'Sam', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/fc/Sam_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20221003185538'},
+{name: 'Mandy', image: 'https://static.wikia.nocookie.net/brawlstars/images/7/75/Mandy_Portrait.png/revision/latest?cb=20221214175140'},
+{name: 'Larry & Lawrie', image: 'https://static.wikia.nocookie.net/brawlstars/images/3/3a/Larry_%26_Lawrie_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20231212185837'},
+{name: 'Angelo', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/8b/Angelo_Portrait.png/revision/latest?cb=20240226185316'},
+{name: 'Berry', image: 'https://static.wikia.nocookie.net/brawlstars/images/b/b9/Berry_Portrait.png/revision/latest?cb=20240624212829'},
+{name: 'Shade', image: 'https://static.wikia.nocookie.net/brawlstars/images/7/7a/Shade_Portrait.png/revision/latest?cb=20241029204306'},
+{name: 'Meeple', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/ff/Meeple_Portrait.png/revision/latest?cb=20241211221517'},
+{name: 'Mortis', image: 'https://static.wikia.nocookie.net/brawlstars/images/b/b4/Mortis_Portrait.png/revision/latest?cb=20200304182441'},
+{name: 'Tara', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/49/Tara_Portrait.png/revision/latest?cb=20190630191241'},
+{name: "D'jinn", image: 'https://static.wikia.nocookie.net/brawlstars/images/7/7c/Gene_Portrait.png/revision/latest?cb=20200304182105'},
+{name: 'Max', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/83/Max_Portrait.png/revision/latest?cb=20201022114240'},
+{name: 'Wally', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/4d/Sprout_Portrait.png/revision/latest?cb=20200404120105'},
+{name: 'Byron', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f6/Byron_Portrait.png/revision/latest?cb=20201218104523'},
+{name: 'Squeak', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/04/Squeak_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20210407173212'},
+{name: 'Médor', image: 'https://static.wikia.nocookie.net/brawlstars/images/6/69/Ruffs_Portrait.png/revision/latest?cb=20210204010252'},
+{name: 'Buzz', image: 'https://static.wikia.nocookie.net/brawlstars/images/2/2c/Buzz_Portrait.png/revision/latest?cb=20231213030117'},
+{name: 'Eve', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/8c/Eve_Portrait.png/revision/latest?cb=20220302034552'},
+{name: 'Janet', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/8b/Janet_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20231213030713'},
+{name: 'Otis', image: 'https://static.wikia.nocookie.net/brawlstars/images/5/58/Otis_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20220629092104'},
+{name: 'Charlie', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/4c/Charlie_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20240425211607'},
+{name: 'Mico', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/cf/Mico_Portrait.png/revision/latest?cb=20231213025610'},
+{name: 'Lily', image: 'https://static.wikia.nocookie.net/brawlstars/images/8/8d/Lily_Portrait.png/revision/latest?cb=20240422220203'},
+{name: 'Ollie', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/a3/Ollie_Portrait.png/revision/latest?cb=20241214062923'},
+{name: 'Spike', image: 'https://static.wikia.nocookie.net/brawlstars/images/2/22/Spike_Portrait.png/revision/latest?cb=20200304182450'},
+{name: 'Corbac', image: 'https://static.wikia.nocookie.net/brawlstars/images/6/6f/Crow_Portrait.png/revision/latest?cb=20200706075842'},
+{name: 'Léon', image: 'https://static.wikia.nocookie.net/brawlstars/images/4/48/Leon_Portrait.png/revision/latest?cb=20200304182803'},
+{name: 'Émeri', image: 'https://static.wikia.nocookie.net/brawlstars/images/e/e3/Sandy_Portrait.png/revision/latest?cb=20200304182134'},
+{name: 'Ambre', image: 'https://static.wikia.nocookie.net/brawlstars/images/9/96/Amber_Portrait.png/revision/latest?cb=20201022114232'},
+{name: 'Meg', image: 'https://static.wikia.nocookie.net/brawlstars/images/5/58/Meg_Portrait.png/revision/latest?cb=20210925184245'},
+{name: 'Surge', image: 'https://static.wikia.nocookie.net/brawlstars/images/2/27/Surge_Portrait.png/revision/latest?cb=20200706075845'},
+{name: 'Chester', image: 'https://static.wikia.nocookie.net/brawlstars/images/3/38/Chester_Portrait.png/revision/latest?cb=20221214180528'},
+{name: 'Cordeluis', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/aa/Cordelius_Portrait.png/revision/latest?cb=20230627183609'},
+{name: 'Kit', image: 'https://static.wikia.nocookie.net/brawlstars/images/7/72/Kit_Portrait.png/revision/latest?cb=20231213190452Ã\x92'},
+{name: 'Draco', image: 'https://static.wikia.nocookie.net/brawlstars/images/c/c2/Draco_Portrait.png/revision/latest?cb=20240423225853'},
+{name: 'Kenji', image: 'https://static.wikia.nocookie.net/brawlstars/images/b/bb/Kenji_Portrait.png/revision/latest?cb=20240829203315'},
+{name: 'Monsieur M.', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/08/Mr._P_Portrait.png/revision/latest?cb=20200317100443'},
+{name: 'Lou', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/0b/Lou_Portrait.png/revision/latest?cb=20201111223555'},
+{name: 'Buster', image: 'https://static.wikia.nocookie.net/brawlstars/images/a/ad/Buster_Portrait.png/revision/latest?cb=20221115022439'},
+{name: 'R-T', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f6/R-T_Portrait.png/revision/latest/scale-to-width-down/1000?cb=20230301172401'},
+{name: 'Melody', imag: 'https://static.wikia.nocookie.net/brawlstars/images/1/1c/Melodie_Portrait.png/revision/latest?cb=20240228113513'},
+{name: 'Clancy', image: 'https://static.wikia.nocookie.net/brawlstars/images/f/f0/Clancy_Portrait.png/revision/latest?cb=20240625155858'},
+{name: 'Moe', image: 'https://static.wikia.nocookie.net/brawlstars/images/9/98/Moe_Portrait.png/revision/latest?cb=20240826202544'},
+{name: 'Juju', image: 'https://static.wikia.nocookie.net/brawlstars/images/0/08/Juju_Portrait.png/revision/latest?cb=20241028193755'},
+{name: 'Doug', image: 'https://static.wikia.nocookie.net/brawlstars/images/5/5a/Doug_Portrait.png/revision/latest?cb=20230627183627'}
+];
+
+const generateButton = document.getElementById('generate-button');
+const brawlerImage = document.getElementById('brawler-image');
+const brawlerName = document.getElementById('brawler-name');
+const rankNumber = document.getElementById('rank-number');
+const rankBadge = document.getElementById('rank-badge');
+const brawlerContainer = document.getElementById('brawler-container');
+// Historique des défis
+let challengeHistory = [];
+function getRandomBrawler() {
+return brawlers[Math.floor(Math.random() * brawlers.length)];
+}
+function getRandomRank() {
+return Math.floor(Math.random() * (51 - 25 + 1)) + 25;
+}
+function updateRankColor(rank) {
+if (rank >= 46) {
+rankBadge.classList.remove('bg-orange-500', 'bg-red-500');
+rankBadge.classList.add('bg-purple-600');
+} else if (rank >= 36) {
+rankBadge.classList.remove('bg-orange-500', 'bg-purple-600');
+rankBadge.classList.add('bg-red-500');
+} else {
+rankBadge.classList.remove('bg-red-500', 'bg-purple-600');
+rankBadge.classList.add('bg-orange-500');
+}
+}
+function generateNewChallenge() {
+// Désactiver le bouton pendant le chargement
+generateButton.disabled = true;
+generateButton.classList.add('opacity-70');
+// Animation de chargement améliorée
+generateButton.innerHTML = '<div class="flex items-center justify-center gap-2"><i class="ri-loader-4-line ri-lg loading"></i> <span>Génération en cours...</span></div>';
+// Ajouter une animation de fond
+document.body.classList.add('generating');
+// Créer un overlay de chargement
+const loadingOverlay = document.createElement('div');
+loadingOverlay.className = 'fixed inset-0 bg-black/30 flex items-center justify-center z-20 backdrop-blur-sm transition-opacity duration-300 opacity-0';
+loadingOverlay.innerHTML = `
+<div class="bg-white rounded-xl p-6 flex flex-col items-center">
+<div class="w-16 h-16 flex items-center justify-center text-primary">
+<i class="ri-gamepad-line ri-3x animate-bounce"></i>
+</div>
+<p class="mt-4 text-gray-800 font-['Lilita_One']">Préparation du défi...</p>
+</div>
+`;
+document.body.appendChild(loadingOverlay);
+// Afficher l'overlay avec animation
+setTimeout(() => loadingOverlay.classList.add('opacity-100'), 50);
+setTimeout(() => {
+brawlerContainer.classList.add('animate');
+setTimeout(() => {
+const randomBrawler = getRandomBrawler();
+const randomRank = getRandomRank();
+brawlerImage.src = randomBrawler.image;
+brawlerName.textContent = randomBrawler.name;
+rankNumber.textContent = randomRank;
+updateRankColor(randomRank);
+// Masquer l'overlay avec animation
+loadingOverlay.classList.remove('opacity-100');
+setTimeout(() => {
+document.body.removeChild(loadingOverlay);
+brawlerContainer.classList.remove('animate');
+// Réactiver le bouton
+generateButton.disabled = false;
+generateButton.classList.remove('opacity-70');
+generateButton.innerHTML = '<i class="fa-solid fa-rotate"></i> Générer Nouveau Défi';
+// Afficher une confirmation
+showConfirmation(`Nouveau défi généré : ${randomBrawler.name} - Rang ${randomRank}`);
+// Ajouter à l'historique
+addToHistory(randomBrawler.name, randomRank, randomBrawler.image);
+// Réinitialiser l'état des boutons de partage et de complétion
+document.getElementById('share-button').classList.remove('bg-gray-400', 'hover:bg-gray-500');
+document.getElementById('share-button').classList.add('bg-secondary', 'hover:bg-secondary/90');
+document.getElementById('share-button').disabled = false;
+document.getElementById('complete-button').classList.remove('bg-gray-400', 'hover:bg-gray-500');
+document.getElementById('complete-button').classList.add('bg-green-500', 'hover:bg-green-600');
+document.getElementById('complete-button').disabled = false;
+document.body.classList.remove('generating');
+}, 300);
+}, 300);
+}, 1200);
+}
+function showConfirmation(message) {
+const confirmation = document.createElement('div');
+confirmation.className = 'fixed top-16 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 opacity-0 translate-y-[-20px] max-w-[90%]';
+confirmation.innerHTML = `
+<div class="flex items-center gap-2">
+<i class="ri-checkbox-circle-line ri-lg"></i>
+<span>${message}</span>
+</div>
+`;
+document.body.appendChild(confirmation);
+// Afficher la confirmation
+setTimeout(() => {
+confirmation.classList.remove('opacity-0', 'translate-y-[-20px]');
+confirmation.classList.add('opacity-100', 'translate-y-0');
+}, 100);
+// Masquer et supprimer la confirmation après 3 secondes
+setTimeout(() => {
+confirmation.classList.remove('opacity-100', 'translate-y-0');
+confirmation.classList.add('opacity-0', 'translate-y-[-20px]');
+setTimeout(() => {
+document.body.removeChild(confirmation);
+}, 300);
+}, 3000);
+}
+function addToHistory(brawlerName, rank, image) {
+const date = new Date();
+const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+challengeHistory.unshift({
+brawlerName,
+rank,
+image,
+date: formattedDate
+});
+// Limiter l'historique à 20 entrées
+if (challengeHistory.length > 20) {
+challengeHistory.pop();
+}
+// Sauvegarder dans localStorage
+localStorage.setItem('brawlChallengeHistory', JSON.stringify(challengeHistory));
+}
+function loadHistory() {
+const savedHistory = localStorage.getItem('brawlChallengeHistory');
+if (savedHistory) {
+challengeHistory = JSON.parse(savedHistory);
+}
+}
+// Navigation entre les pages
+function navigateTo(page) {
+const mainContent = document.querySelector('main');
+const navLinks = document.querySelectorAll('footer a');
+// Mettre à jour les liens actifs
+navLinks.forEach(link => {
+link.classList.remove('text-primary');
+link.classList.add('text-gray-500');
+});
+// Trouver le lien actif et le mettre en surbrillance
+const activeLink = document.querySelector(`footer a[onclick="navigateTo('${page}')"]`);
+if (activeLink) {
+activeLink.classList.remove('text-gray-500');
+activeLink.classList.add('text-primary');
+}
+// Afficher la page correspondante
+switch(page) {
+case 'home':
+mainContent.innerHTML = `
+<div id="brawler-container" class="brawler-card w-full bg-white/90 rounded-xl shadow-lg overflow-hidden">
+<div class="p-6 flex flex-col items-center">
+<div class="w-48 h-48 rounded-full bg-primary/10 mb-4 overflow-hidden flex items-center justify-center">
+<img id="brawler-image" src="${brawlerImage.src}" alt="Brawler" class="w-full h-full object-contain">
+</div>
+<h2 id="brawler-name" class="text-2xl text-gray-800 font-['Lilita_One'] mb-2">${brawlerName.textContent}</h2>
+<div class="w-full mt-4">
+<div class="text-center mb-2 text-gray-600 font-medium">Objectif</div>
+<div id="rank-container" class="flex items-center justify-center">
+<div id="rank-badge" class="rank-badge text-4xl font-['Lilita_One'] text-white px-6 py-3 rounded-xl ${rankBadge.className.split(' ').filter(c => c.startsWith('bg-')).join(' ')}">
+Rang <span id="rank-number">${rankNumber.textContent}</span>
+</div>
+</div>
+<div class="text-center mt-4 text-sm text-gray-500">
+Atteins ce rang avec ce Brawler !
+</div>
+</div>
+</div>
+</div>
+<div class="w-full space-y-4">
+<button id="generate-button" class="button-generate w-full py-4 bg-primary text-white text-xl font-['Lilita_One'] !rounded-button shadow-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-all cursor-pointer">
+<i class="fa-solid fa-rotate"></i>
+Générer Nouveau Défi
+</button>
+<div class="flex gap-3">
+<button id="share-button" class="w-1/2 py-3 bg-secondary text-white font-['Lilita_One'] !rounded-button shadow-md flex items-center justify-center gap-2 hover:bg-secondary/90 transition-all cursor-pointer">
+<i class="fa-solid fa-arrow-up-from-bracket"></i>
+Partager
+</button>
+<button id="complete-button" class="w-1/2 py-3 bg-green-500 text-white font-['Lilita_One'] !rounded-button shadow-md flex items-center justify-center gap-2 hover:bg-green-600 transition-all cursor-pointer">
+<i class="fa-solid fa-check"></i>
+Marquer Complété
+</button>
+</div>
+</div>
+`;
+// Réattacher les événements
+document.getElementById('generate-button').addEventListener('click', generateNewChallenge);
+// Réinitialiser les références
+brawlerImage = document.getElementById('brawler-image');
+brawlerName = document.getElementById('brawler-name');
+rankNumber = document.getElementById('rank-number');
+rankBadge = document.getElementById('rank-badge');
+brawlerContainer = document.getElementById('brawler-container');
+break;
+case 'history':
+let historyHTML = `
+<div class="w-full">
+<h2 class="text-2xl text-gray-800 font-['Lilita_One'] mb-6 text-center">Historique des Défis</h2>
+`;
+if (challengeHistory.length === 0) {
+historyHTML += `
+<div class="bg-white/90 rounded-xl shadow-lg p-6 text-center">
+<i class="ri-history-line ri-3x text-gray-400 mb-4"></i>
+<p class="text-gray-600">Aucun défi dans l'historique</p>
+</div>
+`;
+} else {
+historyHTML += `<div class="space-y-4">`;
+challengeHistory.forEach((challenge, index) => {
+const rankColorClass = challenge.rank >= 46 ? 'bg-purple-600' :
+challenge.rank >= 36 ? 'bg-red-500' : 'bg-orange-500';
+historyHTML += `
+<div class="bg-white/90 rounded-xl shadow-lg overflow-hidden">
+<div class="p-4 flex items-center">
+<div class="w-16 h-16 rounded-full bg-primary/10 overflow-hidden flex-shrink-0">
+<img src="${challenge.image}" alt="${challenge.brawlerName}" class="w-full h-full object-contain">
+</div>
+<div class="ml-4 flex-1">
+<h3 class="text-lg text-gray-800 font-['Lilita_One']">${challenge.brawlerName}</h3>
+<div class="flex items-center justify-between">
+<span class="text-sm text-gray-500">${challenge.date}</span>
+<div class="rank-badge text-sm font-['Lilita_One'] text-white px-3 py-1 rounded-lg ${rankColorClass}">
+Rang ${challenge.rank}
+</div>
+</div>
+</div>
+</div>
+</div>
+`;
+});
+historyHTML += `</div>`;
+}
+historyHTML += `</div>`;
+mainContent.innerHTML = historyHTML;
+break;
+case 'settings':
+mainContent.innerHTML = `
+<div class="w-full">
+<h2 class="text-2xl text-gray-800 font-['Lilita_One'] mb-6 text-center">Paramètres</h2>
+<div class="bg-white/90 rounded-xl shadow-lg overflow-hidden">
+<div class="p-6 space-y-6">
+<div>
+<h3 class="text-lg text-gray-800 font-['Lilita_One'] mb-3">Préférences</h3>
+<div class="flex items-center justify-between py-2 border-b border-gray-200">
+<span class="text-gray-700">Notifications</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" value="" class="sr-only peer" checked>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-gray-200">
+<span class="text-gray-700">Son</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" value="" class="sr-only peer" checked>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<div>
+<h3 class="text-lg text-gray-800 font-['Lilita_One'] mb-3">À propos</h3>
+<div class="text-gray-700 space-y-2">
+<p>Version: 1.0.0</p>
+<p>Développé par: <span class="font-['Pacifico']">logo</span></p>
+</div>
+</div>
+<button id="clear-history" class="w-full py-3 bg-red-500 text-white font-['Lilita_One'] !rounded-button shadow-lg flex items-center justify-center gap-2 hover:bg-red-600 transition-all cursor-pointer mt-4">
+<i class="ri-delete-bin-line ri-lg"></i>
+Effacer l'historique
+</button>
+</div>
+</div>
+</div>
+`;
+// Ajouter l'événement pour effacer l'historique
+document.getElementById('clear-history').addEventListener('click', () => {
+challengeHistory = [];
+localStorage.removeItem('brawlChallengeHistory');
+showToast('Historique effacé avec succès');
+});
+break;
+}
+}
+function showToast(message) {
+// Créer un toast
+const toast = document.createElement('div');
+toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300 opacity-0';
+toast.textContent = message;
+document.body.appendChild(toast);
+// Afficher le toast
+setTimeout(() => {
+toast.classList.remove('opacity-0');
+toast.classList.add('opacity-100');
+}, 100);
+// Masquer et supprimer le toast après 3 secondes
+setTimeout(() => {
+toast.classList.remove('opacity-100');
+toast.classList.add('opacity-0');
+setTimeout(() => {
+document.body.removeChild(toast);
+}, 300);
+}, 3000);
+}
+// Fonctions pour les nouveaux boutons
+function shareChallenge() {
+const currentBrawler = brawlerName.textContent;
+const currentRank = rankNumber.textContent;
+// Créer la modal de partage
+const shareModal = document.createElement('div');
+shareModal.className = 'share-modal';
+shareModal.innerHTML = `
+<div class="share-modal-content">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-['Lilita_One'] text-gray-800">Partager le défi</h3>
+<button class="close-modal text-gray-500 hover:text-gray-700">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="mb-4 p-3 bg-gray-100 rounded-lg">
+<p class="text-gray-700">J'ai un nouveau défi Brawl Stars : atteindre le Rang ${currentRank} avec ${currentBrawler} ! 🎮</p>
+</div>
+<div class="grid grid-cols-4 gap-4">
+<button class="share-option flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white mb-1">
+<i class="ri-facebook-fill ri-lg"></i>
+</div>
+<span class="text-xs text-gray-600">Facebook</span>
+</button>
+<button class="share-option flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-sky-500 flex items-center justify-center text-white mb-1">
+<i class="ri-twitter-x-fill ri-lg"></i>
+</div>
+<span class="text-xs text-gray-600">Twitter</span>
+</button>
+<button class="share-option flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white mb-1">
+<i class="ri-whatsapp-fill ri-lg"></i>
+</div>
+<span class="text-xs text-gray-600">WhatsApp</span>
+</button>
+<button class="share-option flex flex-col items-center">
+<div class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white mb-1">
+<i class="ri-discord-fill ri-lg"></i>
+</div>
+<span class="text-xs text-gray-600">Discord</span>
+</button>
+</div>
+<button class="copy-text w-full mt-4 py-3 bg-gray-200 text-gray-800 font-['Lilita_One'] !rounded-button flex items-center justify-center gap-2 hover:bg-gray-300 transition-all">
+<i class="ri-clipboard-line ri-lg"></i>
+Copier le texte
+</button>
+</div>
+`;
+document.body.appendChild(shareModal);
+// Afficher la modal avec animation
+setTimeout(() => {
+shareModal.classList.add('active');
+}, 50);
+// Fermer la modal
+shareModal.querySelector('.close-modal').addEventListener('click', () => {
+shareModal.classList.remove('active');
+setTimeout(() => {
+document.body.removeChild(shareModal);
+}, 300);
+});
+// Copier le texte
+shareModal.querySelector('.copy-text').addEventListener('click', () => {
+const textToCopy = `J'ai un nouveau défi Brawl Stars : atteindre le Rang ${currentRank} avec ${currentBrawler} ! 🎮`;
+navigator.clipboard.writeText(textToCopy).then(() => {
+showToast('Texte copié dans le presse-papier');
+});
+});
+// Gérer les options de partage
+const shareOptions = shareModal.querySelectorAll('.share-option');
+shareOptions.forEach(option => {
+option.addEventListener('click', () => {
+showToast('Partage en cours...');
+setTimeout(() => {
+shareModal.classList.remove('active');
+setTimeout(() => {
+document.body.removeChild(shareModal);
+}, 300);
+}, 1000);
+});
+});
+}
+function markAsCompleted() {
+const currentBrawler = brawlerName.textContent;
+const currentRank = rankNumber.textContent;
+// Ajouter la classe pour l'effet visuel
+brawlerContainer.classList.add('completed-challenge');
+// Désactiver les boutons
+document.getElementById('complete-button').disabled = true;
+document.getElementById('complete-button').classList.remove('bg-green-500', 'hover:bg-green-600');
+document.getElementById('complete-button').classList.add('bg-gray-400', 'hover:bg-gray-500');
+document.getElementById('complete-button').innerHTML = '<i class="ri-check-double-line ri-lg"></i> Complété';
+// Mettre à jour l'historique
+updateChallengeStatus(currentBrawler, parseInt(currentRank), true);
+// Afficher une confirmation
+showConfirmation(`Félicitations ! Défi avec ${currentBrawler} complété !`);
+// Après 3 secondes, proposer de générer un nouveau défi
+setTimeout(() => {
+const newChallengePrompt = document.createElement('div');
+newChallengePrompt.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-primary text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 opacity-0 translate-y-[20px] flex items-center gap-2';
+newChallengePrompt.innerHTML = `
+<i class="ri-arrow-up-line ri-lg animate-bounce"></i>
+<span>Générer un nouveau défi ?</span>
+`;
+document.body.appendChild(newChallengePrompt);
+setTimeout(() => {
+newChallengePrompt.classList.remove('opacity-0', 'translate-y-[20px]');
+newChallengePrompt.classList.add('opacity-100', 'translate-y-0');
+}, 100);
+setTimeout(() => {
+newChallengePrompt.classList.remove('opacity-100', 'translate-y-0');
+newChallengePrompt.classList.add('opacity-0', 'translate-y-[20px]');
+setTimeout(() => {
+document.body.removeChild(newChallengePrompt);
+}, 300);
+}, 5000);
+}, 3000);
+}
+function updateChallengeStatus(brawlerName, rank, completed) {
+// Mettre à jour le statut dans l'historique
+for (let i = 0; i < challengeHistory.length; i++) {
+if (challengeHistory[i].brawlerName === brawlerName && challengeHistory[i].rank === rank) {
+challengeHistory[i].completed = completed;
+break;
+}
+}
+// Sauvegarder dans localStorage
+localStorage.setItem('brawlChallengeHistory', JSON.stringify(challengeHistory));
+}
+// Modifier la fonction addToHistory pour inclure le statut
+function addToHistory(brawlerName, rank, image) {
+const date = new Date();
+const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+challengeHistory.unshift({
+brawlerName,
+rank,
+image,
+date: formattedDate,
+completed: false
+});
+// Limiter l'historique à 20 entrées
+if (challengeHistory.length > 20) {
+challengeHistory.pop();
+}
+// Sauvegarder dans localStorage
+localStorage.setItem('brawlChallengeHistory', JSON.stringify(challengeHistory));
+}
+// Modifier la fonction navigateTo pour l'historique
+function navigateTo(page) {
+const mainContent = document.querySelector('main');
+const navLinks = document.querySelectorAll('footer a');
+// Mettre à jour les liens actifs
+navLinks.forEach(link => {
+link.classList.remove('text-primary');
+link.classList.add('text-gray-500');
+});
+// Trouver le lien actif et le mettre en surbrillance
+const activeLink = document.querySelector(`footer a[onclick="navigateTo('${page}')"]`);
+if (activeLink) {
+activeLink.classList.remove('text-gray-500');
+activeLink.classList.add('text-primary');
+}
+// Afficher la page correspondante
+switch(page) {
+case 'home':
+mainContent.innerHTML = `
+<div id="brawler-container" class="brawler-card w-full bg-white/90 rounded-xl shadow-lg overflow-hidden">
+<div class="p-6 flex flex-col items-center">
+<div class="w-48 h-48 rounded-full bg-primary/10 mb-4 overflow-hidden flex items-center justify-center">
+<img id="brawler-image" src="${brawlerImage.src}" alt="Brawler" class="w-full h-full object-contain">
+</div>
+<h2 id="brawler-name" class="text-2xl text-gray-800 font-['Lilita_One'] mb-2">${brawlerName.textContent}</h2>
+<div class="w-full mt-4">
+<div class="text-center mb-2 text-gray-600 font-medium">Objectif</div>
+<div id="rank-container" class="flex items-center justify-center">
+<div id="rank-badge" class="rank-badge text-4xl font-['Lilita_One'] text-white px-6 py-3 rounded-xl ${rankBadge.className.split(' ').filter(c => c.startsWith('bg-')).join(' ')}">
+Rang <span id="rank-number">${rankNumber.textContent}</span>
+</div>
+</div>
+<div class="text-center mt-4 text-sm text-gray-500">
+Atteins ce rang avec ce Brawler !
+</div>
+</div>
+</div>
+</div>
+<div class="w-full space-y-4">
+<button id="generate-button" class="button-generate w-full py-4 bg-primary text-white text-xl font-['Lilita_One'] !rounded-button shadow-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-all cursor-pointer">
+<i class="fa-solid fa-rotate"></i>
+Générer Nouveau Défi
+</button>
+<div class="flex gap-3">
+<button id="share-button" class="w-1/2 py-3 bg-secondary text-white font-['Lilita_One'] !rounded-button shadow-md flex items-center justify-center gap-2 hover:bg-secondary/90 transition-all cursor-pointer">
+<i class="fa-solid fa-arrow-up-from-bracket"></i>
+Partager
+</button>
+<button id="complete-button" class="w-1/2 py-3 bg-green-500 text-white font-['Lilita_One'] !rounded-button shadow-md flex items-center justify-center gap-2 hover:bg-green-600 transition-all cursor-pointer">
+<i class="fa-solid fa-check"></i>
+Marquer Complété
+</button>
+</div>
+</div>
+`;
+// Réattacher les événements
+document.getElementById('generate-button').addEventListener('click', generateNewChallenge);
+document.getElementById('share-button').addEventListener('click', shareChallenge);
+document.getElementById('complete-button').addEventListener('click', markAsCompleted);
+// Réinitialiser les références
+brawlerImage = document.getElementById('brawler-image');
+brawlerName = document.getElementById('brawler-name');
+rankNumber = document.getElementById('rank-number');
+rankBadge = document.getElementById('rank-badge');
+brawlerContainer = document.getElementById('brawler-container');
+// Vérifier si le défi actuel est déjà complété
+const currentBrawler = brawlerName.textContent;
+const currentRank = parseInt(rankNumber.textContent);
+const isCompleted = challengeHistory.some(challenge =>
+challenge.brawlerName === currentBrawler &&
+challenge.rank === currentRank &&
+challenge.completed === true
+);
+if (isCompleted) {
+brawlerContainer.classList.add('completed-challenge');
+document.getElementById('complete-button').disabled = true;
+document.getElementById('complete-button').classList.remove('bg-green-500', 'hover:bg-green-600');
+document.getElementById('complete-button').classList.add('bg-gray-400', 'hover:bg-gray-500');
+document.getElementById('complete-button').innerHTML = '<i class="ri-check-double-line ri-lg"></i> Complété';
+}
+break;
+case 'history':
+let historyHTML = `
+<div class="w-full">
+<h2 class="text-2xl text-white font-['Lilita_One'] mb-6 text-center">Historique des Défis</h2>
+`;
+if (challengeHistory.length === 0) {
+historyHTML += `
+<div class="bg-white/90 rounded-xl shadow-lg p-6 text-center">
+<i class="fa-solid fa-clock-rotate-left fa-2xl" style="color: #696969;"></i>
+<p class="text-gray-600">Aucun défi dans l'historique</p>
+</div>
+`;
+} else {
+historyHTML += `<div class="space-y-4">`;
+challengeHistory.forEach((challenge, index) => {
+const rankColorClass = challenge.rank >= 46 ? 'bg-purple-600' :
+challenge.rank >= 36 ? 'bg-red-500' : 'bg-orange-500';
+// Ajouter la classe pour les défis complétés
+const completedClass = challenge.completed ? 'border-2 border-green-500' : '';
+const completedIcon = challenge.completed ? '<i class="ri-check-double-line text-green-500 ri-lg absolute top-2 right-2"></i>' : '';
+historyHTML += `
+<div class="bg-white/90 rounded-xl shadow-lg overflow-hidden relative ${completedClass}" data-index="${index}">
+${completedIcon}
+<div class="p-4 flex items-center">
+<div class="w-16 h-16 rounded-full bg-primary/10 overflow-hidden flex-shrink-0">
+<img src="${challenge.image}" alt="${challenge.brawlerName}" class="w-full h-full object-contain">
+</div>
+<div class="ml-4 flex-1">
+<h3 class="text-lg text-gray-800 font-['Lilita_One']">${challenge.brawlerName}</h3>
+<div class="flex items-center justify-between">
+<span class="text-sm text-gray-500">${challenge.date}</span>
+<div class="rank-badge text-sm font-['Lilita_One'] text-white px-3 py-1 rounded-lg ${rankColorClass}">
+Rang ${challenge.rank}
+</div>
+</div>
+</div>
+</div>
+<div class="flex border-t border-gray-100">
+${challenge.completed ? 
+`<button class="flex-1 py-2 text-gray-400 font-medium text-sm flex items-center justify-center gap-1 bg-gray-50">
+<i class="ri-check-double-line"></i>
+Complété
+</button>` : 
+`<button class="complete-history-btn flex-1 py-2 text-green-600 font-medium text-sm flex items-center justify-center gap-1 hover:bg-green-50 transition-colors">
+<i class="ri-check-line"></i>
+Marquer complété
+</button>`}
+<button class="delete-history-btn flex-1 py-2 text-red-500 font-medium text-sm flex items-center justify-center gap-1 border-l border-gray-100 hover:bg-red-50 transition-colors">
+<i class="fa-solid fa-trash"></i>
+Supprimer
+</button>
+</div>
+</div>
+`;
+});
+historyHTML += `</div>`;
+}
+historyHTML += `</div>`;
+mainContent.innerHTML = historyHTML;
+// Ajouter les événements pour les boutons dans l'historique
+const completeButtons = document.querySelectorAll('.complete-history-btn');
+completeButtons.forEach(button => {
+  button.addEventListener('click', function() {
+    const challengeCard = this.closest('[data-index]');
+    const index = parseInt(challengeCard.dataset.index);
+    
+    // Mettre à jour le statut dans l'historique
+    challengeHistory[index].completed = true;
+    localStorage.setItem('brawlChallengeHistory', JSON.stringify(challengeHistory));
+    
+    // Mettre à jour l'interface
+    challengeCard.classList.add('border-2', 'border-green-500');
+    const checkIcon = document.createElement('i');
+    checkIcon.className = 'ri-check-double-line text-green-500 ri-lg absolute top-2 right-2';
+    challengeCard.appendChild(checkIcon);
+    
+    // Remplacer le bouton
+    const buttonContainer = this.parentElement;
+    buttonContainer.innerHTML = `
+      <button class="flex-1 py-2 text-gray-400 font-medium text-sm flex items-center justify-center gap-1 bg-gray-50">
+        <i class="ri-check-double-line"></i>
+        Complété
+      </button>
+      <button class="delete-history-btn flex-1 py-2 text-red-500 font-medium text-sm flex items-center justify-center gap-1 border-l border-gray-100 hover:bg-red-50 transition-colors">
+        <i class="fa-solid fa-trash"></i>
+        Supprimer
+      </button>
+    `;
+    
+    // Réattacher l'événement de suppression
+    buttonContainer.querySelector('.delete-history-btn').addEventListener('click', deleteHistoryItem);
+    
+    showToast('Défi marqué comme complété !');
+  });
+});
+const deleteButtons = document.querySelectorAll('.delete-history-btn');
+deleteButtons.forEach(button => {
+  button.addEventListener('click', deleteHistoryItem);
+});
+function deleteHistoryItem() {
+  const challengeCard = this.closest('[data-index]');
+  const index = parseInt(challengeCard.dataset.index);
+  
+  // Créer une confirmation de suppression
+  const confirmModal = document.createElement('div');
+  confirmModal.className = 'share-modal';
+  confirmModal.innerHTML = `
+    <div class="share-modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-['Lilita_One'] text-gray-800">Confirmer la suppression</h3>
+        <button class="close-modal text-gray-500 hover:text-gray-700">
+          <i class="ri-close-line ri-lg"></i>
+        </button>
+      </div>
+      <p class="mb-6 text-gray-600">Êtes-vous sûr de vouloir supprimer ce défi de l'historique ?</p>
+      <div class="flex gap-3">
+        <button class="cancel-delete w-1/2 py-3 bg-gray-200 text-gray-700 font-['Lilita_One'] !rounded-button flex items-center justify-center gap-2 hover:bg-gray-300 transition-all">
+          Annuler
+        </button>
+        <button class="confirm-delete w-1/2 py-3 bg-red-500 text-white font-['Lilita_One'] !rounded-button flex items-center justify-center gap-2 hover:bg-red-600 transition-all">
+          Supprimer
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(confirmModal);
+  
+  // Afficher la modal avec animation
+  setTimeout(() => {
+    confirmModal.classList.add('active');
+  }, 50);
+  
+  // Gérer les événements de la modal
+  confirmModal.querySelector('.close-modal').addEventListener('click', () => {
+    confirmModal.classList.remove('active');
+    setTimeout(() => {
+      document.body.removeChild(confirmModal);
+    }, 300);
+  });
+  
+  confirmModal.querySelector('.cancel-delete').addEventListener('click', () => {
+    confirmModal.classList.remove('active');
+    setTimeout(() => {
+      document.body.removeChild(confirmModal);
+    }, 300);
+  });
+  
+  confirmModal.querySelector('.confirm-delete').addEventListener('click', () => {
+    // Supprimer l'élément de l'historique
+    challengeHistory.splice(index, 1);
+    localStorage.setItem('brawlChallengeHistory', JSON.stringify(challengeHistory));
+    
+    // Animation de suppression
+    challengeCard.style.transition = 'all 0.3s ease';
+    challengeCard.style.transform = 'translateX(100%)';
+    challengeCard.style.opacity = '0';
+    
+    setTimeout(() => {
+      challengeCard.remove();
+      
+      // Si l'historique est vide, mettre à jour l'affichage
+      if (challengeHistory.length === 0) {
+        const historyContainer = document.querySelector('.space-y-4');
+        if (historyContainer) {
+          historyContainer.innerHTML = `
+            <div class="bg-white/90 rounded-xl shadow-lg p-6 text-center">
+              <i class="fa-solid fa-clock-rotate-left fa-2xl" style="color: #696969;"></i>
+              <p class="text-gray-600">Aucun défi dans l'historique</p>
+            </div>
+          `;
+        }
+      }
+      
+      showToast('Défi supprimé de l\'historique');
+      
+      // Fermer la modal
+      confirmModal.classList.remove('active');
+      setTimeout(() => {
+        document.body.removeChild(confirmModal);
+      }, 300);
+    }, 300);
+  });
+}
+break;
+case 'settings':
+mainContent.innerHTML = `
+<div class="w-full">
+<h2 class="text-2xl text-gray-800 font-['Lilita_One'] mb-6 text-center">Paramètres</h2>
+<div class="bg-white/90 rounded-xl shadow-lg overflow-hidden">
+<div class="p-6 space-y-6">
+<div>
+<h3 class="text-lg text-gray-800 font-['Lilita_One'] mb-3">Préférences</h3>
+<div class="flex items-center justify-between py-2 border-b border-gray-200">
+<span class="text-gray-700">Notifications</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" value="" class="sr-only peer" checked>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between py-2 border-b border-gray-200">
+<span class="text-gray-700">Son</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input type="checkbox" value="" class="sr-only peer" checked>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<div>
+<h3 class="text-lg text-gray-800 font-['Lilita_One'] mb-3">À propos</h3>
+<div class="text-gray-700 space-y-2">
+<p>Version: 1.0.0</p>
+<p>Développé par: <span class="font-['Pacifico']">logo</span></p>
+</div>
+</div>
+<button id="clear-history" class="w-full py-3 bg-red-500 text-white font-['Lilita_One'] !rounded-button shadow-lg flex items-center justify-center gap-2 hover:bg-red-600 transition-all cursor-pointer mt-4">
+<i class="fa-solid fa-trash"></i>
+Effacer l'historique
+</button>
+</div>
+</div>
+</div>
+`;
+// Ajouter l'événement pour effacer l'historique
+document.getElementById('clear-history').addEventListener('click', () => {
+challengeHistory = [];
+localStorage.removeItem('brawlChallengeHistory');
+showToast('Historique effacé avec succès');
+});
+break;
+}
+}
+// Initialisation
+generateButton.addEventListener('click', generateNewChallenge);
+document.getElementById('share-button').addEventListener('click', shareChallenge);
+document.getElementById('complete-button').addEventListener('click', markAsCompleted);
+loadHistory();
+updateRankColor(parseInt(rankNumber.textContent));
+</script>
+</body>
+</html>
